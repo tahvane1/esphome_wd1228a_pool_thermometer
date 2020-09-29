@@ -13,7 +13,7 @@ logger:
   #level: DEBUG
 
 substitutions:
-  hostname: "esp32_pooltemp"
+  hostname: "esp8266_pooltemp"
 
 # Enable Home Assistant API
 api:
@@ -21,12 +21,6 @@ api:
 
 ota:
    password: !secret ota_password
-
-i2c:
- # sda: 4
- # scl: 5
-  scan: True
-  id: bus_a
 
 sensor:
 - platform: custom
@@ -63,41 +57,3 @@ sensor:
           window_size: 5
           send_every: 5
           send_first_at: 5
-- platform: bme280
-  temperature:
-    name: "BME280 Temperature"
-    id: bme280_temperature
-  pressure:
-    name: "BME280 Pressure"
-    id: bme280_pressure
-  humidity:
-    name: "BME280 Relative Humidity"
-    id: bme280_humidity
-  address: 0x76
-  update_interval: 900s
-- platform: template
-  name: "Altitude"
-  lambda: |-
-    const float STANDARD_SEA_LEVEL_PRESSURE = 1013.25; //in hPa, see note
-    return ((id(bme280_temperature).state + 273.15) / 0.0065) *
-      (powf((STANDARD_SEA_LEVEL_PRESSURE / id(bme280_pressure).state), 0.190234) - 1); // in meter
-  update_interval: 15s
-  icon: 'mdi:signal'
-  unit_of_measurement: 'm'
-- platform: template
-  name: "Absolute Humidity"
-  lambda: |-
-    const float mw = 18.01534;    // molar mass of water g/mol
-    const float r = 8.31447215;   // Universal gas constant J/mol/K
-    return (6.112 * powf(2.718281828, (17.67 * id(bme280_temperature).state) /
-      (id(bme280_temperature).state + 243.5)) * id(bme280_humidity).state * mw) /
-      ((273.15 + id(bme280_temperature).state) * r); // in grams/m^3
-  accuracy_decimals: 2
-  update_interval: 15s
-  icon: 'mdi:water'
-  unit_of_measurement: 'g/m³'
-- platform: template
-  name: "Dew Point"
-  lambda: return (243.5*(log(id(bme280_humidity).state/100)+((17.67*id(bme280_temperature).state)/(243.5+id(bme280_temperature).state)))/(17.67-log(id(bme280_humidity).state/100)-((17.67*id(bme280_temperature).state)/(243.5+id(bme280_temperature).state))));
-  unit_of_measurement: °C
-  icon: 'mdi:thermometer-alert'
